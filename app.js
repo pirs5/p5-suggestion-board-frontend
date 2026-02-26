@@ -30,12 +30,10 @@ function getClientToken() {
 }
 
 function formatDate(iso) {
-  return new Date(iso).toLocaleString([], {
+  return new Date(iso).toLocaleDateString([], {
     year: "numeric",
     month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
+    day: "2-digit"
   });
 }
 
@@ -77,7 +75,6 @@ function renderToReview(list) {
     const node = toReviewTemplate.content.cloneNode(true);
     const article = node.querySelector(".to-review-card");
     article.style.animationDelay = `${index * 45}ms`;
-    node.querySelector(".card-id").textContent = `ID: ${card.id}`;
     node.querySelector(".card-date").textContent = `Created: ${formatDate(card.createdAt)}`;
     node.querySelector(".card-message").textContent = card.message;
 
@@ -151,7 +148,6 @@ function renderDone(list) {
         const article = node.querySelector(".done-card");
         article.style.animationDelay = `${cardIndex * 35}ms`;
 
-        node.querySelector(".card-id").textContent = `ID: ${card.id}`;
         node.querySelector(".card-date").textContent = `Created: ${formatDate(card.createdAt)}`;
         node.querySelector(".card-message").textContent = card.message;
         node.querySelector(".done-meta").textContent = `Done by ${card.closedBy} on ${formatDate(card.closedAt)}`;
