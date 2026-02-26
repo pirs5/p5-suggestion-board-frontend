@@ -19,6 +19,7 @@ const manifestoOpen = document.getElementById("manifesto-open");
 const manifestoUnderstood = document.getElementById("manifesto-understood");
 const closedByInput = document.getElementById("closed-by");
 const confirmDone = document.getElementById("confirm-done");
+const closeError = document.getElementById("close-error");
 
 let cards = [];
 let memoryClientToken = null;
@@ -66,6 +67,8 @@ function setStatusMessage({ error = "", success = "" }) {
 function openOverlay(panel) {
   modalOverlay.hidden = false;
   document.body.classList.add("modal-open");
+  modalOverlay.classList.toggle("overlay-manifesto", panel === "manifesto");
+  modalOverlay.classList.toggle("overlay-close", panel === "close");
   manifestoPanel.hidden = panel !== "manifesto";
   closePanel.hidden = panel !== "close";
 }
@@ -75,8 +78,10 @@ function closeOverlay() {
   manifestoPanel.hidden = true;
   closePanel.hidden = true;
   document.body.classList.remove("modal-open");
+  modalOverlay.classList.remove("overlay-manifesto", "overlay-close");
   activeCloseCardId = null;
   closedByInput.value = "";
+  closeError.textContent = "";
 }
 
 function openManifesto() {
@@ -86,7 +91,12 @@ function openManifesto() {
 function openDoneModal(cardId) {
   activeCloseCardId = cardId;
   openOverlay("close");
+  closeError.textContent = "";
   closedByInput.focus();
+}
+
+function setCloseError(message) {
+  closeError.textContent = message;
 }
 
 function renderToReview(list) {
@@ -204,15 +214,17 @@ form.addEventListener("submit", async event => {
   }
 });
 
-confirmDone.addEventListener("click", async () => {
+async function handleConfirmDone() {
   if (!activeCloseCardId) return;
 
   const closedBy = closedByInput.value.trim();
   if (!closedBy) {
-    setStatusMessage({ error: "Your name is required to move card to done." });
+    setCloseError("Your name is required.");
+    closedByInput.focus();
     return;
   }
 
+  setCloseError("");
   confirmDone.disabled = true;
   try {
     await apiFetch(`/api/cards/${activeCloseCardId}/close`, {
@@ -223,9 +235,17 @@ confirmDone.addEventListener("click", async () => {
     setStatusMessage({ success: "Card moved to done." });
     await loadCards();
   } catch (error) {
-    setStatusMessage({ error: error.message });
+    setCloseError(error.message);
   } finally {
     confirmDone.disabled = false;
+  }
+}
+
+confirmDone.addEventListener("click", handleConfirmDone);
+closedByInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    handleConfirmDone();
   }
 });
 
