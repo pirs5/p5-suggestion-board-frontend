@@ -39,6 +39,10 @@
   --muted: #9a9a98;
   --accent: #ffea00;
   --done-accent: #79ff6f;
+  --radius: 25px;
+  --inset-tight: 14px;
+  --inset-md: 20px;
+  --inset-lg: 28px;
 }
 
 * {
@@ -59,7 +63,7 @@ body {
 .page {
   width: min(860px, 100%);
   min-height: 1007px;
-  border-radius: 25px;
+  border-radius: var(--radius);
   background: var(--panel);
   padding: 41px 58px 48px;
   transition: filter 220ms ease;
@@ -111,10 +115,10 @@ textarea {
   width: 100%;
   height: 108px;
   border: none;
-  border-radius: 25px;
+  border-radius: var(--radius);
   background: #5f5f5f;
   color: #f2f2f2;
-  padding: 18px 24px;
+  padding: 17px var(--inset-lg) calc(var(--inset-md) + 22px) 26px;
   font-family: "Manrope", sans-serif;
   font-size: 12px;
   line-height: 1.35;
@@ -138,14 +142,14 @@ textarea:focus,
 
 .send-action {
   position: absolute;
-  right: 13px;
-  bottom: 15px;
+  right: var(--inset-md);
+  bottom: var(--inset-md);
   border: none;
   background: var(--accent);
   color: #1b1b1b;
   height: 28px;
   min-width: 112px;
-  border-radius: 25px;
+  border-radius: var(--radius);
   padding: 0 18px;
   font-size: 12px;
   font-family: "Manrope", sans-serif;
@@ -154,9 +158,9 @@ textarea:focus,
 
 .composer-meta {
   display: grid;
-  gap: 6px;
-  margin-top: 8px;
-  min-height: 44px;
+  gap: 4px;
+  margin-top: 6px;
+  min-height: 0;
 }
 
 #char-count {
@@ -215,10 +219,10 @@ textarea:focus,
 }
 
 .card {
-  border-radius: 25px;
-  padding: 19px 30px;
+  border-radius: var(--radius);
+  padding: var(--inset-md) var(--inset-lg);
   display: grid;
-  gap: 12px;
+  gap: 14px;
   opacity: 0;
   transform: translateY(10px);
   animation: cardIn 220ms ease forwards;
@@ -243,7 +247,8 @@ textarea:focus,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 2px;
 }
 
 .card-date {
@@ -258,8 +263,8 @@ textarea:focus,
   color: #1b1b1b;
   height: 28px;
   min-width: 108px;
-  border-radius: 25px;
-  padding: 0 16px;
+  border-radius: var(--radius);
+  padding: 0 18px;
   font-size: 12px;
   font-family: "Manrope", sans-serif;
   cursor: pointer;
@@ -302,7 +307,7 @@ textarea:focus,
 }
 
 .modal-panel {
-  border-radius: 25px;
+  border-radius: var(--radius);
 }
 
 .manifesto-panel {
@@ -335,7 +340,7 @@ textarea:focus,
   border: none;
   width: 112px;
   height: 28px;
-  border-radius: 25px;
+  border-radius: var(--radius);
   background: var(--accent);
   color: #1b1b1b;
   font-size: 12px;
@@ -346,20 +351,17 @@ textarea:focus,
   width: min(314px, 100%);
   height: 90px;
   background: #5a5a5a;
-  display: grid;
-  grid-template-columns: 1fr 36px;
-  grid-template-areas:
-    "input confirm"
-    "error error";
+  display: flex;
   align-items: center;
-  gap: 8px 10px;
-  padding: 0 13px 0 23px;
+  gap: 10px;
+  padding: var(--inset-tight) 13px var(--inset-tight) 23px;
+  position: relative;
 }
 
 .close-name-input {
-  grid-area: input;
+  flex: 1;
   border: none;
-  border-radius: 25px;
+  border-radius: var(--radius);
   height: 34px;
   background: #b2b2b2;
   padding: 0 19px;
@@ -372,22 +374,29 @@ textarea:focus,
 }
 
 .confirm-done-action {
-  grid-area: confirm;
+  flex: 0 0 auto;
   border: none;
   width: 36px;
   height: 34px;
-  border-radius: 25px;
+  border-radius: var(--radius);
   background: #6fff61;
   cursor: pointer;
 }
 
 .close-error {
-  grid-area: error;
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 2px;
+  display: none;
   margin: 0;
-  min-height: 14px;
   font-size: 11px;
   line-height: 1.2;
   color: #ffd2d2;
+}
+
+.close-error:not(:empty) {
+  display: block;
 }
 
 .sr-only {
@@ -496,7 +505,6 @@ textarea:focus,
   .close-panel {
     width: 100%;
     height: auto;
-    grid-template-columns: 1fr 40px;
     padding: 14px;
   }
 
