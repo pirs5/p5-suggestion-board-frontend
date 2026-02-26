@@ -1,6 +1,6 @@
 const API_BASE_URL = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "";
-const STORAGE_KEY = "anonymous_initiative_manifesto_ack";
-const CLIENT_TOKEN_KEY = "anonymous_initiative_client_token";
+const STORAGE_KEY = "suggestion_board_manifesto_ack";
+const CLIENT_TOKEN_KEY = "suggestion_board_client_token";
 
 const form = document.getElementById("card-form");
 const messageInput = document.getElementById("message");
@@ -8,19 +8,21 @@ const charCount = document.getElementById("char-count");
 const formError = document.getElementById("form-error");
 const formSuccess = document.getElementById("form-success");
 const toReviewList = document.getElementById("to-review-list");
-const doneGroups = document.getElementById("done-groups");
-const toReviewCount = document.getElementById("to-review-count");
-const doneCount = document.getElementById("done-count");
+const doneList = document.getElementById("done-list");
 const toReviewTemplate = document.getElementById("to-review-card-template");
 const doneTemplate = document.getElementById("done-card-template");
 
-const manifestoModal = document.getElementById("manifesto-modal");
+const modalOverlay = document.getElementById("modal-overlay");
+const manifestoPanel = document.getElementById("manifesto-panel");
+const closePanel = document.getElementById("close-panel");
 const manifestoOpen = document.getElementById("manifesto-open");
-const manifestoClose = document.getElementById("manifesto-close");
 const manifestoUnderstood = document.getElementById("manifesto-understood");
+const closedByInput = document.getElementById("closed-by");
+const confirmDone = document.getElementById("confirm-done");
 
 let cards = [];
 let memoryClientToken = null;
+let activeCloseCardId = null;
 
 function safeGetItem(key) {
   try {
@@ -34,7 +36,7 @@ function safeSetItem(key, value) {
   try {
     localStorage.setItem(key, value);
   } catch {
-    // Ignore storage errors (private mode / blocked storage).
+    // Ignore blocked storage errors.
   }
 }
 
@@ -43,9 +45,8 @@ function getClientToken() {
   if (existing) return existing;
   if (memoryClientToken) return memoryClientToken;
 
-  const token = crypto.randomUUID();
-  safeSetItem(CLIENT_TOKEN_KEY, token);
-  memoryClientToken = token;
+  memoryClientToken = crypto.randomUUID();
+  safeSetItem(CLIENT_TOKEN_KEY, memoryClientToken);
   return memoryClientToken;
 }
 
@@ -57,71 +58,56 @@ function formatDate(iso) {
   });
 }
 
-function startOfWeek(iso) {
-  const date = new Date(iso);
-  const day = date.getDay();
-  const diff = (day === 0 ? -6 : 1) - day;
-  date.setDate(date.getDate() + diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
+function setStatusMessage({ error = "", success = "" }) {
+  formError.textContent = error;
+  formSuccess.textContent = success;
 }
 
-function weekLabel(startDate) {
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 6);
-  const fmt = new Intl.DateTimeFormat([], {
-    month: "short",
-    day: "2-digit",
-    year: "numeric"
-  });
-  return `${fmt.format(startDate)} - ${fmt.format(endDate)}`;
+function openOverlay(panel) {
+  modalOverlay.hidden = false;
+  document.body.classList.add("modal-open");
+  manifestoPanel.hidden = panel !== "manifesto";
+  closePanel.hidden = panel !== "close";
 }
 
-function clearFormState() {
-  formError.textContent = "";
-  formSuccess.textContent = "";
+function closeOverlay() {
+  modalOverlay.hidden = true;
+  manifestoPanel.hidden = true;
+  closePanel.hidden = true;
+  document.body.classList.remove("modal-open");
+  activeCloseCardId = null;
+  closedByInput.value = "";
+}
+
+function openManifesto() {
+  openOverlay("manifesto");
+}
+
+function openDoneModal(cardId) {
+  activeCloseCardId = cardId;
+  openOverlay("close");
+  closedByInput.focus();
 }
 
 function renderToReview(list) {
   toReviewList.innerHTML = "";
-  toReviewCount.textContent = String(list.length);
 
   if (!list.length) {
-    toReviewList.innerHTML = '<p class="hint">No cards in To Review.</p>';
+    toReviewList.innerHTML = '<p class="empty-note">No cards in to review.</p>';
     return;
   }
 
   list.forEach((card, index) => {
     const node = toReviewTemplate.content.cloneNode(true);
-    const article = node.querySelector(".to-review-card");
-    article.style.animationDelay = `${index * 45}ms`;
-    node.querySelector(".card-date").textContent = `Created: ${formatDate(card.createdAt)}`;
+    const cardEl = node.querySelector(".to-review-card");
+    cardEl.style.animationDelay = `${index * 50}ms`;
+
     node.querySelector(".card-message").textContent = card.message;
+    node.querySelector(".card-date").textContent = formatDate(card.createdAt);
 
-    const closerInput = node.querySelector(".closer-input");
-    const closeError = node.querySelector(".error");
-    const closeAction = node.querySelector(".close-action");
-
-    closeAction.addEventListener("click", async () => {
-      closeError.textContent = "";
-      const closedBy = closerInput.value.trim();
-      if (!closedBy) {
-        closeError.textContent = "Who moved this card is required.";
-        return;
-      }
-
-      closeAction.disabled = true;
-      try {
-        await apiFetch(`/api/cards/${card.id}/close`, {
-          method: "POST",
-          body: JSON.stringify({ closedBy })
-        });
-        await loadCards();
-      } catch (error) {
-        closeError.textContent = error.message;
-      } finally {
-        closeAction.disabled = false;
-      }
+    const doneBtn = node.querySelector(".done-action");
+    doneBtn.addEventListener("click", () => {
+      openDoneModal(card.id);
     });
 
     toReviewList.appendChild(node);
@@ -129,67 +115,37 @@ function renderToReview(list) {
 }
 
 function renderDone(list) {
-  doneGroups.innerHTML = "";
-  doneCount.textContent = String(list.length);
+  doneList.innerHTML = "";
 
   if (!list.length) {
-    doneGroups.innerHTML = '<p class="hint">No cards in Done yet.</p>';
+    doneList.innerHTML = '<p class="empty-note">No cards in done yet.</p>';
     return;
   }
 
-  const grouped = new Map();
+  list.forEach((card, index) => {
+    const node = doneTemplate.content.cloneNode(true);
+    const cardEl = node.querySelector(".done-card");
+    cardEl.style.animationDelay = `${index * 50}ms`;
 
-  list.forEach(card => {
-    const weekStart = startOfWeek(card.closedAt);
-    const key = weekStart.toISOString();
-    if (!grouped.has(key)) {
-      grouped.set(key, { weekStart, cards: [] });
-    }
-    grouped.get(key).cards.push(card);
-  });
+    node.querySelector(".card-message").textContent = card.message;
+    node.querySelector(".done-meta").textContent = `done by ${card.closedBy || "team"}`;
 
-  const ordered = Array.from(grouped.values()).sort((a, b) => b.weekStart - a.weekStart);
-
-  ordered.forEach((group, index) => {
-    const details = document.createElement("details");
-    details.className = "done-group";
-    details.open = index === 0;
-
-    const summary = document.createElement("summary");
-    summary.textContent = `${weekLabel(group.weekStart)} · ${group.cards.length} card${group.cards.length === 1 ? "" : "s"}`;
-
-    const cardsWrap = document.createElement("div");
-    cardsWrap.className = "group-cards";
-
-    group.cards
-      .sort((a, b) => new Date(b.closedAt) - new Date(a.closedAt))
-      .forEach((card, cardIndex) => {
-        const node = doneTemplate.content.cloneNode(true);
-        const article = node.querySelector(".done-card");
-        article.style.animationDelay = `${cardIndex * 35}ms`;
-
-        node.querySelector(".card-date").textContent = `Created: ${formatDate(card.createdAt)}`;
-        node.querySelector(".card-message").textContent = card.message;
-        node.querySelector(".done-meta").textContent = `Done by ${card.closedBy} on ${formatDate(card.closedAt)}`;
-        cardsWrap.appendChild(node);
-      });
-
-    details.appendChild(summary);
-    details.appendChild(cardsWrap);
-    doneGroups.appendChild(details);
+    doneList.appendChild(node);
   });
 }
 
 function renderBoard() {
   const toReview = cards.filter(card => card.status === "to_review");
-  const done = cards.filter(card => card.status === "done" && card.closedAt);
+  const done = cards
+    .filter(card => card.status === "done" && card.closedAt)
+    .sort((a, b) => new Date(b.closedAt).getTime() - new Date(a.closedAt).getTime());
+
   renderToReview(toReview);
   renderDone(done);
 }
 
 async function apiFetch(path, options = {}) {
-  const url = `${API_BASE_URL}${path}`;
-  const response = await fetch(url, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -207,27 +163,29 @@ async function apiFetch(path, options = {}) {
 
 async function loadCards() {
   const result = await apiFetch("/api/cards");
-  cards = result.cards || [];
+  cards = Array.isArray(result.cards) ? result.cards : [];
   renderBoard();
 }
 
 messageInput.addEventListener("input", () => {
   charCount.textContent = `${messageInput.value.length} / 800`;
-  if (messageInput.value.length <= 800) formError.textContent = "";
+  if (messageInput.value.length <= 800) {
+    setStatusMessage({ error: "" });
+  }
 });
 
 form.addEventListener("submit", async event => {
   event.preventDefault();
-  clearFormState();
-  const message = messageInput.value.trim();
+  setStatusMessage({});
 
+  const message = messageInput.value.trim();
   if (!message) {
-    formError.textContent = "Message cannot be empty.";
+    setStatusMessage({ error: "Message cannot be empty." });
     return;
   }
 
   if (message.length > 800) {
-    formError.textContent = "Message exceeds 800 character limit.";
+    setStatusMessage({ error: "Message exceeds 800 character limit." });
     return;
   }
 
@@ -236,35 +194,57 @@ form.addEventListener("submit", async event => {
       method: "POST",
       body: JSON.stringify({ message })
     });
-    formSuccess.textContent = "Card added to To Review.";
+
+    setStatusMessage({ success: "Card added to review." });
     messageInput.value = "";
     charCount.textContent = "0 / 800";
     await loadCards();
   } catch (error) {
-    formError.textContent = error.message;
+    setStatusMessage({ error: error.message });
   }
 });
 
-function openManifesto() {
-  if (!manifestoModal) return;
-  if (typeof manifestoModal.showModal !== "function") return;
-  if (!manifestoModal.open) {
-    manifestoModal.showModal();
-  }
-}
+confirmDone.addEventListener("click", async () => {
+  if (!activeCloseCardId) return;
 
-function closeManifesto() {
-  if (!manifestoModal) return;
-  if (manifestoModal.open && typeof manifestoModal.close === "function") {
-    manifestoModal.close();
+  const closedBy = closedByInput.value.trim();
+  if (!closedBy) {
+    setStatusMessage({ error: "Your name is required to move card to done." });
+    return;
   }
-}
+
+  confirmDone.disabled = true;
+  try {
+    await apiFetch(`/api/cards/${activeCloseCardId}/close`, {
+      method: "POST",
+      body: JSON.stringify({ closedBy })
+    });
+    closeOverlay();
+    setStatusMessage({ success: "Card moved to done." });
+    await loadCards();
+  } catch (error) {
+    setStatusMessage({ error: error.message });
+  } finally {
+    confirmDone.disabled = false;
+  }
+});
 
 manifestoOpen.addEventListener("click", openManifesto);
-manifestoClose.addEventListener("click", closeManifesto);
 manifestoUnderstood.addEventListener("click", () => {
   safeSetItem(STORAGE_KEY, "true");
-  closeManifesto();
+  closeOverlay();
+});
+
+modalOverlay.addEventListener("click", event => {
+  if (event.target === modalOverlay) {
+    closeOverlay();
+  }
+});
+
+window.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !modalOverlay.hidden) {
+    closeOverlay();
+  }
 });
 
 (async function init() {
@@ -274,6 +254,6 @@ manifestoUnderstood.addEventListener("click", () => {
     }
     await loadCards();
   } catch (error) {
-    formError.textContent = "Unable to load board. Check API configuration.";
+    setStatusMessage({ error: "Unable to load board. Check API configuration." });
   }
 })();
