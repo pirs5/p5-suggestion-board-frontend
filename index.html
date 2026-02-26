@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anonymous Initiative Board</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="page">
+    <header class="topbar" aria-label="Board header">
+      <div>
+        <p class="section-kicker">Internal Evolution System</p>
+        <h1>Anonymous Initiative Board</h1>
+        <p class="subtitle">A stable space for process improvement signals.</p>
+      </div>
+      <button id="manifesto-open" class="action" type="button">Open Manifesto</button>
+    </header>
+
+    <section class="submission" aria-label="Create new initiative card">
+      <div class="submission-head">
+        <h2>Submit Anonymous Card</h2>
+        <p id="char-count" class="count">0 / 800</p>
+      </div>
+      <p class="guidance">
+        One card = one idea.<br>
+        Focus on processes, not people.<br>
+        Propose improvement, not blame.<br>
+        Be constructive and specific.
+      </p>
+      <form id="card-form" novalidate>
+        <label class="sr-only" for="message">Card message</label>
+        <textarea id="message" name="message" maxlength="800" required placeholder="Describe one specific process improvement idea."></textarea>
+        <div class="form-actions">
+          <p class="hint">Cards are anonymous, immutable, and visible to the entire team.</p>
+          <button class="action" type="submit">Send to To Review</button>
+        </div>
+      </form>
+      <p id="form-error" class="error" role="alert"></p>
+      <p id="form-success" class="success" role="status"></p>
+    </section>
+
+    <section class="board" aria-label="Initiative board">
+      <article class="column" aria-labelledby="to-review-title">
+        <div class="column-head">
+          <h3 id="to-review-title">🟡 To Review</h3>
+          <p id="to-review-count" class="count">0</p>
+        </div>
+        <div id="to-review-list" class="card-list" aria-live="polite"></div>
+      </article>
+
+      <article class="column" aria-labelledby="done-title">
+        <div class="column-head">
+          <h3 id="done-title">🟢 Done</h3>
+          <p id="done-count" class="count">0</p>
+        </div>
+        <div id="done-groups" class="done-groups" aria-live="polite"></div>
+      </article>
+    </section>
+  </main>
+
+  <dialog id="manifesto-modal" class="manifesto-modal" aria-labelledby="manifesto-title">
+    <article class="manifesto-content">
+      <button id="manifesto-close" class="ghost" type="button" aria-label="Close manifesto">Close</button>
+
+      <section>
+        <h2 id="manifesto-title">«Зачем существует эта доска»</h2>
+        <p>Зачем существует эта доска</p>
+        <p>Эта доска создана для развития нашей системы, а не для критики людей.</p>
+        <p>Здесь:</p>
+        <ul>
+          <li>нет авторов</li>
+          <li>нет рейтингов</li>
+          <li>нет споров</li>
+          <li>нет наказаний</li>
+        </ul>
+        <p>Каждая карточка — это вклад в эволюцию команды.</p>
+        <p>Мы придерживаемся трёх принципов:</p>
+        <p>1. Мы пишем про процессы, а не про людей.</p>
+        <p>2. Мы предлагаем улучшения, а не только фиксируем проблему.</p>
+        <p>3. Мы уважаем инициативу друг друга, даже если не согласны.</p>
+        <p>Если карточка остаётся в «К рассмотрению» —<br>это не игнор.<br>Это означает, что решение ещё не принято.</p>
+        <p>Если карточка переведена в «Сделано» —<br>значит по ней принято действие или достигнута договорённость.</p>
+        <p>Анонимность — это инструмент безопасности, а не оружие.</p>
+      </section>
+
+      <section>
+        <h2>«Микро-правила формулировки карточек»</h2>
+        <p>Микро-правила формулировки карточек</p>
+        <p>Одна карточка — одна мысль.</p>
+        <p>Формулируем конструктивно:<br>— Что предлагаю изменить?<br>— Что это улучшит?</p>
+        <p>Не упоминаем конкретных людей.<br>Карточка — про систему, не про личность.</p>
+        <p>Максимум 800 символов.<br>Короткая мысль — ясная мысль.</p>
+        <p>Это не обсуждение и не чат.<br>Это сигнал и инициатива.</p>
+        <p>Перед отправкой проверь:<br>— Это про улучшение?<br>— Это сформулировано уважительно?<br>— Это можно обсудить без поиска виноватых?</p>
+      </section>
+
+      <button id="manifesto-understood" class="action" type="button">Understood</button>
+    </article>
+  </dialog>
+
+  <template id="to-review-card-template">
+    <article class="card to-review-card">
+      <div class="card-meta">
+        <p class="card-date"></p>
+        <p class="card-id"></p>
+      </div>
+      <p class="card-message"></p>
+      <div class="close-row">
+        <input class="closer-input" type="text" maxlength="80" placeholder="Your name / role" aria-label="Who closed this card">
+        <button class="action close-action" type="button">Move to Done</button>
+      </div>
+      <p class="error"></p>
+    </article>
+  </template>
+
+  <template id="done-card-template">
+    <article class="card done-card">
+      <div class="card-meta">
+        <p class="card-date"></p>
+        <p class="card-id"></p>
+      </div>
+      <p class="card-message"></p>
+      <p class="done-meta"></p>
+    </article>
+  </template>
+
+  <script src="./config.js"></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+@font-face {
+  font-family: "ManropeDisplay";
+  src: url("./Fonts/ManropePier5-Display.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Manrope";
+  src: url("./Fonts/Manrope-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Manrope";
+  src: url("./Fonts/Manrope-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Manrope";
+  src: url("./Fonts/Manrope-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --ink: #050505;
+  --text: #f1f1ed;
+  --brand-yellow: #f8c600;
+  --line: rgba(255, 255, 255, 0.16);
+  --line-strong: rgba(255, 255, 255, 0.4);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-alt: rgba(255, 255, 255, 0.02);
+  --success: #9fcea0;
+  --danger: #f5aaa3;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+  --space-1: 0.4rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.3rem;
+  --space-5: 1.7rem;
+  --sans: "Manrope", "Inter", sans-serif;
+  --display: "ManropeDisplay", "Manrope", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--ink);
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--text);
+  background:
+    linear-gradient(180deg, rgba(248, 198, 0, 0.14), rgba(248, 198, 0, 0) 28%),
+    linear-gradient(135deg, rgba(193, 199, 179, 0.12), transparent 42%),
+    var(--ink);
+  padding: min(4.8vw, 36px);
+}
+
+.page {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+  overflow: hidden;
+}
+
+.topbar,
+.submission,
+.board {
+  padding: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.topbar {
+  border-top: none;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.section-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.17em;
+  font-size: 0.67rem;
+  color: rgba(241, 241, 237, 0.7);
+  font-weight: 700;
+  margin: 0;
+}
+
+h1 {
+  margin: 0.35rem 0 0;
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: clamp(1.7rem, 4vw, 3.2rem);
+  line-height: 0.96;
+}
+
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.subtitle {
+  margin-top: var(--space-2);
+  color: rgba(241, 241, 237, 0.9);
+  max-width: 56ch;
+}
+
+.submission {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.submission-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.guidance,
+.hint {
+  color: rgba(241, 241, 237, 0.85);
+  line-height: 1.45;
+}
+
+textarea,
+.closer-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem;
+  background: var(--surface-alt);
+  color: var(--text);
+  font: inherit;
+}
+
+textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+textarea:focus,
+.closer-input:focus,
+.action:focus-visible,
+.ghost:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--brand-yellow);
+  outline-offset: 1px;
+}
+
+.form-actions,
+.close-row,
+.column-head,
+.card-meta {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+  align-items: center;
+}
+
+form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.column {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: linear-gradient(95deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  min-height: 380px;
+}
+
+.card-list,
+.done-groups {
+  margin-top: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: var(--space-2);
+  display: grid;
+  gap: var(--space-2);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: cardIn 260ms ease forwards;
+}
+
+.card-message {
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.card-date,
+.card-id,
+.count,
+.done-meta,
+summary {
+  color: rgba(241, 241, 237, 0.75);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.done-meta {
+  color: rgba(159, 206, 160, 0.92);
+}
+
+.done-group {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+}
+
+.done-group summary {
+  cursor: pointer;
+  list-style: none;
+  padding: var(--space-2);
+}
+
+.done-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.done-group .group-cards {
+  padding: 0 var(--space-2) var(--space-2);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.action,
+.ghost {
+  width: fit-content;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  font: inherit;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.action {
+  background: linear-gradient(95deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  color: var(--text);
+  padding: 0.62rem 0.9rem;
+}
+
+.action:hover {
+  background: #ffffff;
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line);
+  padding: 0.55rem 0.8rem;
+}
+
+.error,
+.success {
+  min-height: 1rem;
+  font-size: 0.86rem;
+}
+
+.error {
+  color: var(--danger);
+}
+
+.success {
+  color: var(--success);
+}
+
+.manifesto-modal {
+  width: min(880px, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: #0c0c0c;
+  color: var(--text);
+  padding: 0;
+}
+
+.manifesto-modal::backdrop {
+  background: rgba(5, 5, 5, 0.8);
+}
+
+.manifesto-content {
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+  overflow: auto;
+  max-height: calc(100vh - 4rem);
+}
+
+.manifesto-content h2 {
+  font-family: var(--display);
+  font-size: clamp(1.3rem, 3vw, 2.2rem);
+  text-transform: uppercase;
+  margin-bottom: var(--space-2);
+}
+
+.manifesto-content p,
+.manifesto-content li {
+  line-height: 1.5;
+  margin-bottom: var(--space-1);
+}
+
+.manifesto-content ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@keyframes cardIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 860px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar,
+  .form-actions,
+  .close-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action,
+  .ghost {
+    width: 100%;
+  }
+}
