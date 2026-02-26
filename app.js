@@ -20,13 +20,33 @@ const manifestoClose = document.getElementById("manifesto-close");
 const manifestoUnderstood = document.getElementById("manifesto-understood");
 
 let cards = [];
+let memoryClientToken = null;
+
+function safeGetItem(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetItem(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage errors (private mode / blocked storage).
+  }
+}
 
 function getClientToken() {
-  const existing = localStorage.getItem(CLIENT_TOKEN_KEY);
+  const existing = safeGetItem(CLIENT_TOKEN_KEY);
   if (existing) return existing;
+  if (memoryClientToken) return memoryClientToken;
+
   const token = crypto.randomUUID();
-  localStorage.setItem(CLIENT_TOKEN_KEY, token);
-  return token;
+  safeSetItem(CLIENT_TOKEN_KEY, token);
+  memoryClientToken = token;
+  return memoryClientToken;
 }
 
 function formatDate(iso) {
@@ -226,25 +246,30 @@ form.addEventListener("submit", async event => {
 });
 
 function openManifesto() {
+  if (!manifestoModal) return;
+  if (typeof manifestoModal.showModal !== "function") return;
   if (!manifestoModal.open) {
     manifestoModal.showModal();
   }
 }
 
 function closeManifesto() {
-  if (manifestoModal.open) manifestoModal.close();
+  if (!manifestoModal) return;
+  if (manifestoModal.open && typeof manifestoModal.close === "function") {
+    manifestoModal.close();
+  }
 }
 
 manifestoOpen.addEventListener("click", openManifesto);
 manifestoClose.addEventListener("click", closeManifesto);
 manifestoUnderstood.addEventListener("click", () => {
-  localStorage.setItem(STORAGE_KEY, "true");
+  safeSetItem(STORAGE_KEY, "true");
   closeManifesto();
 });
 
 (async function init() {
   try {
-    if (localStorage.getItem(STORAGE_KEY) !== "true") {
+    if (safeGetItem(STORAGE_KEY) !== "true") {
       openManifesto();
     }
     await loadCards();
